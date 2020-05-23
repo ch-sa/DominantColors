@@ -16,7 +16,7 @@ class ImageFinder:
         else:
             dist, points = self.color_tree.query(rgb_color, n)
 
-        results = self.images.loc[points.tolist()]
+        results = self.images.reindex(points.tolist())
         results["distance"] = np.round(dist, 2)
         results = results.sort_values(by=["distance", "count"], ascending=[True, False])
 

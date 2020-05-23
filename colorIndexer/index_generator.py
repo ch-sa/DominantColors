@@ -99,8 +99,6 @@ class IndexGenerator:
                 hex_color, count = results[0]
                 rgb_colors = hex2rgb(hex_color)
 
-                print("Col: %s,\t Count: %s" % (rgb_colors, count))
-
                 dom_colors.loc[len(dom_colors)] = [image_name, image_path, parent_folder] + rgb_colors + [count]
 
                 if not self.SILENT:
@@ -155,8 +153,10 @@ def calculate_new_size(image, WIDTH, HEIGHT):
 
 
 def save_path_to_config(index_path):
-    config = yaml.safe_load(open("../config.yml"))
+    config = yaml.safe_load(open("config.yml"))
     config["image_viewer"]["index_path"] = index_path
     config["color_index_creator"]["last_created"] = str(datetime.now())
-    with open("../config.yml", 'w') as file:
+    with open("config.yml", 'w') as file:
         yaml.dump(config, file)
+
+    print("Saved %s in config.yml!" % index_path)
