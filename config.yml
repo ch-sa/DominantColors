@@ -1,0 +1,5 @@
+color_index_creator:
+  default_index_path: data/dominant_colors.csv
+  last_created: null
+image_viewer:
+  index_path: null
