@@ -10,10 +10,12 @@ class Model:
         self.website_path = "resources/Website/index.html"
         self.table_path = None  #"resources/data/images-doc.csv"
         self.image_finder = None
+        self.matched_table = None
 
     def set_index_path(self, path):
         self.table_path = path
         self.image_finder = ImageFinder(self.table_path)
+        print("Color index was (re-)set to %s!" % self.table_path)
 
     def match_images(self, color, img_no, min_area):
         self.matched_table = self.image_finder.get_similar_images(color, img_no, min_area)
@@ -23,17 +25,16 @@ class Model:
         else:
             return True
 
-    def prepare_images(self):
-        print("Preparing %s images ..." % len(self.matched_table))
-        self.images = self.matched_table.meta_path.values
-
     def update_website(self):
+        print("Preparing %s images ..." % len(self.matched_table))
+        image_paths = self.matched_table.meta_path.values
+
         # load the file
-        with open(self.website_template) as webfile:
-            html = webfile.read()
+        with open(self.website_template) as website:
+            html = website.read()
             site = bs4.BeautifulSoup(html, features="html.parser")
 
-        for img in self.images:
+        for img in image_paths:
             # create new image box
             att_div1 = {'class': "gallery-item"}
             att_div2 = {'class': "content"}
@@ -50,5 +51,5 @@ class Model:
         # </div>
 
         # save the file again
-        with open(self.website_path, "w") as outf:
-            outf.write(str(site))
+        with open(self.website_path, "w") as outgoing_file:
+            outgoing_file.write(str(site))

@@ -16,7 +16,13 @@ class ImageFinder:
         else:
             dist, points = self.color_tree.query(rgb_color, n)
 
-        results = self.images.reindex(points.tolist())
+        points = points.tolist()
+        if not isinstance(points, int):
+            results = self.images.reindex(points)
+        else:
+            results = self.images.reindex([points])     # Handling single image exception TODO make better
+
+
         results["distance"] = np.round(dist, 2)
         results = results.sort_values(by=["distance", "count"], ascending=[True, False])
 
@@ -31,7 +37,7 @@ class ImageFinder:
 
 # HELPERS
 
-# Reads in csv file and returns DataFrame
+# Reads in csv file and returns DataFrame + colors as np.array
 def read_table(path):
     images = pd.read_csv(path, index_col=0)
     print("Table has %s images with %s dominant colors from %s folders." %

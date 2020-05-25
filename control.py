@@ -3,6 +3,8 @@ import os
 from PyQt5.QtCore import QUrl
 from PyQt5.QtWidgets import QFileDialog
 
+from colorIndexer.index_generator import IndexGenerator
+from colorIndexer.index_gui import IndexGui
 from gui import Gui
 from model import Model
 
@@ -18,10 +20,8 @@ class Control:
     def connect_events(self):
         # Color selection
         self.view.colorButton.colorChanged.connect(self.onColorChanged)
-
         # Input checkup
         self.view.searchButton.clicked.connect(self.check_color_input)
-
         # Image search and presentation
         self.view.imageGallery.loadProgress.connect(self.loadProgressHandler)
 
@@ -29,22 +29,17 @@ class Control:
         self.view.imageFilterCB.stateChanged.connect(self.advancedSettings)
 
         self.view.dialImgNo.valueChanged.connect(lambda x: self.view.lineEditImgNo.setText(str(x)))
-        self.view.lineEditImgNo.textChanged.connect(lambda x: self.view.dialImgNo.setValue(int(x)))
-
+        self.view.lineEditImgNo.textChanged.connect(lambda x: self.view.dialImgNo.setValue(int(x)) if x.isdigit() else False)
         self.view.dialArea.valueChanged.connect(lambda x: self.view.lineEditArea.setText(str(x)))
         self.view.lineEditArea.textChanged.connect(lambda x: self.view.dialArea.setValue(int(x)))
 
         self.view.changeIndexButton.clicked.connect(self.change_index_path)
+        self.view.generateIndexButton.clicked.connect(self.generate_new_index)
 
     # EVENTS
     def load_index_path(self):
         config = yaml.safe_load(open("config.yml"))
         index_path = config["image_viewer"].get("index_path")
-        self.model.set_index_path(index_path)
-
-    def change_index_path(self):
-        index_path = QFileDialog.getOpenFileName(QFileDialog(), "Select a Generated Index File",
-                                                 os.getcwd(), "csv(*.csv)", options=QFileDialog.DontUseNativeDialog)[0]
         self.model.set_index_path(index_path)
 
     def onColorChanged(self):
@@ -58,11 +53,11 @@ class Control:
 
     # Check the correctness of the user input for the color
     def check_color_input(self):
+        # Check color input
         self.view.textOutput.clear()
         error_msg = "Please enter a valid color in hex-format (#123456)."
         selected_color = self.view.hexInput.text()
 
-        # Sanity Check
         if len(selected_color) == 4:
             selected_color = "#" + selected_color[1] * 2 + selected_color[2] * 2 + selected_color[3] * 2
             self.view.hexInput.setText(selected_color)
@@ -72,6 +67,15 @@ class Control:
 
         print('Selected color:' + selected_color)
         self.show_color_circle(selected_color)
+
+        # Check image count input
+        no_of_images = self.view.dialImgNo.value()
+        if no_of_images >= 1:
+            print("Selected image count: %s" % no_of_images)
+        else:
+            self.view.textOutput.setText("Image count must be at least 1.")
+            return
+
         self.prepare_website(selected_color)
 
     def prepare_website(self, selected_color: str):
@@ -81,15 +85,12 @@ class Control:
         no_of_images = self.view.dialImgNo.value()
         min_area = self.view.dialArea.value()
         success = self.model.match_images(selected_color, no_of_images, min_area)
+
         if not success:
             error_msg = "Did not find any matching image to the given criteria!" \
                         " Please adapt your settings and retry. :)"
             self.view.textOutput.setText(error_msg)
             return
-
-        # Preparing images
-        print("Preparing images ...")
-        self.model.prepare_images()
 
         # Update website
         print("Prepare website ...")
@@ -107,3 +108,18 @@ class Control:
     def advancedSettings(self, activated: bool):
         self.view.dialFrame.setVisible(activated)
         self.view.buttonFrame.setVisible(activated)
+
+    # TODO Change to native file dialog
+    def change_index_path(self):
+        index_path = QFileDialog.getOpenFileName(QFileDialog(), "Select a Generated Index File",
+                                                 os.getcwd(), "csv(*.csv)", options=QFileDialog.DontUseNativeDialog)[0]
+
+        print("Retrieving %s from index selection dialog." % index_path)
+        if index_path:
+            self.model.set_index_path(index_path)
+
+    def generate_new_index(self):
+        print("Opening dialog to generate new index ...")
+        index_gui = IndexGui()
+        index_generator = IndexGenerator(index_gui, self)
+        index_gui.exec_()
