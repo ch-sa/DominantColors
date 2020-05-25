@@ -5,10 +5,10 @@ import yaml
 
 from PIL import Image, ImageFile
 from datetime import datetime
-
-ImageFile.LOAD_TRUNCATED_IMAGES = True
 from sklearn.cluster import KMeans
 from collections import Counter
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 
 
 class IndexGenerator:

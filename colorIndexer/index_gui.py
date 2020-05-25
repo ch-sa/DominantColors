@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, uic, QtGui, QtCore
+from PyQt5 import QtWidgets, uic, QtGui
 from PyQt5.QtWidgets import QFileDialog
 
 
@@ -32,6 +32,7 @@ class IndexGui(QtWidgets.QDialog):
     def connectToEvents(self):
         self.folderButton.clicked.connect(self.selectImageFolder)
         self.indexButton.clicked.connect(self.selectIndexPath)
+        self.chancelButton.clicked.connect(self.close)
 
     # File location selection
     def selectImageFolder(self):
@@ -40,7 +41,7 @@ class IndexGui(QtWidgets.QDialog):
 
     def selectIndexPath(self):
         save_path, ending = QFileDialog.getSaveFileName(self, 'Location for Generated Index File', '',
-                                                filter='*.csv', options=QFileDialog.DontUseNativeDialog)
+                                                        filter='*.csv', options=QFileDialog.DontUseNativeDialog)
 
         if save_path[-4:] != ".csv":
             save_path += ending

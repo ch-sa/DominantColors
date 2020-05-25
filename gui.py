@@ -1,8 +1,8 @@
 from PyQt5 import QtWidgets, uic, QtGui
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 
-from color_button import QColorButton
 
+# TODO fix point size error
 
 class Gui(QtWidgets.QMainWindow):
     def __init__(self):

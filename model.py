@@ -8,7 +8,7 @@ class Model:
     def __init__(self):
         self.website_template = "resources/Website/index_template.html"
         self.website_path = "resources/Website/index.html"
-        self.table_path = None  #"resources/data/images-doc.csv"
+        self.table_path = None  # default: "resources/data/images-doc.csv"
         self.image_finder = None
         self.matched_table = None
 
