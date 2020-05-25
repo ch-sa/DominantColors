@@ -26,3 +26,9 @@ pip install -r requirements.txt
 - [ ] Improve index updating
 - [ ] Also consider second & third dominant color
 - [ ] Speed up index generation process
+
+## Credits
+- Image Gallery [modified] (https://codepen.io/vhanla/pen/PxjZvj)
+- Color Clustering [modified] (tba.)
+- Test Images (https://www.pexels.com/)
+- 
