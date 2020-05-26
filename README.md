@@ -17,10 +17,11 @@ Simply clone this repository ...
 git clone https://github.com/ch-sa/DominantColors.git
 ```
 
-... and install the dependencies using `pip` or conda:
+... and install the dependencies using `pip` or `conda`:
 ```bash
 pip install -r requirements.txt
 ```
+The gui is started by executing `python3 setup.py`
 
 ## Possible Future Features
 - [ ] Improve index updating
@@ -31,4 +32,3 @@ pip install -r requirements.txt
 - Image Gallery [modified] (https://codepen.io/vhanla/pen/PxjZvj)
 - Color Clustering [modified] (tba.)
 - Test Images (https://www.pexels.com/)
-- 
