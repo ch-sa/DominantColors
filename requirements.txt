@@ -1,11 +1,10 @@
 beautifulsoup4~=4.9.0
-yaml~=0.2.4
 pyyaml~=5.3.1
 pandas~=1.0.3
 numpy~=1.18.1
 pillow~=7.1.2
 scikit-learn~=0.23.1
 scipy~=1.4.1
-pyqt~=5.12.3
+pyqt5~=5.12.3
 pyqt5-sip~=4.19.18
 pyqtwebengine~=5.12.1b
