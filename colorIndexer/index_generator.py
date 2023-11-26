@@ -1,4 +1,5 @@
 import os
+from typing import Tuple
 import pandas as pd
 import numpy as np
 import yaml
@@ -6,9 +7,63 @@ import yaml
 from PIL import Image, ImageFile
 from datetime import datetime
 from sklearn.cluster import KMeans
+import scipy.cluster
+import sklearn.cluster
 from collections import Counter
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+
+
+def dominant_color_via_kmeans(image_path: str, width: int, height: int, clusters: int) -> Tuple[Tuple[int, int, int], int]:
+        # Load image
+        image = Image.open(image_path)
+
+        # Transform image
+        new_width, new_height = calculate_new_size(image, width, height)
+        image = image.resize((new_width, new_height), Image.ANTIALIAS)
+
+        img_array = np.array(image)
+        img_vector = img_array.reshape((img_array.shape[0] * img_array.shape[1], 3))
+
+        # Modeling
+        model = KMeans(n_clusters=clusters)
+        labels = model.fit_predict(img_vector)
+        label_counts = Counter(labels)
+
+        hex_colors = [rgb2hex(center) for center in model.cluster_centers_]
+
+        results = list(zip(hex_colors, list(label_counts.values())))
+        results.sort(key=lambda tup: tup[1], reverse=True)
+
+        print(results)
+
+        hex_color, count = results[0]
+        return hex2rgb(hex_color), count
+
+
+def dominant_color_via_mini_kmeans(image_path: str, width: int, height: int, clusters: int) -> Tuple[Tuple[int, int, int], int]:
+    image = Image.open(image_path)
+
+    image = image.resize((width, height))
+    ar = np.asarray(image)
+    shape = ar.shape
+    ar = ar.reshape(np.product(shape[:2]), shape[2]).astype(float)
+
+    kmeans = sklearn.cluster.MiniBatchKMeans(
+        n_clusters=clusters,
+        init="k-means++",
+        max_iter=20,
+        random_state=1000
+    ).fit(ar)
+    codes = kmeans.cluster_centers_
+
+    vecs, _dist = scipy.cluster.vq.vq(ar, codes)         # assign codes
+    counts, _bins = np.histogram(vecs, len(codes))    # count occurrences
+
+    colors = []
+    for index in np.argsort(counts)[::-1]:
+        colors.append(tuple([int(code) for code in codes[index]]))
+    return colors[0], counts[0]
 
 
 class IndexGenerator:
@@ -54,10 +109,6 @@ class IndexGenerator:
         self.extract_colors(sorted(image_paths))
 
     def extract_colors(self, image_paths):
-        # OLD FORMATING
-        # columns=["image", "color_1", "count_1", "color_2", "count_2",
-        #          "color_3", "count_3", "color_4", "count_4", "parent_folder", "path"])
-
         df_columns = ["meta_image", "meta_path", "meta_folder", "red", "green", "blue", "count"]
         dom_colors = pd.DataFrame(columns=df_columns)
 
@@ -71,48 +122,18 @@ class IndexGenerator:
                 image_name = os.path.basename(image_path)
                 parent_folder = os.path.split(os.path.split(image_path)[0])[1]
 
-                # Load image
-                image = Image.open(image_path)
-                if not self.SILENT:
-                    self.log("Loaded {f} image {n}. Size: {s:.2f} KB. Dimensions: ({d})".format(
-                        f=image.format, n=image_name, s=os.path.getsize(image_path) / 1024, d=image.size))
+                rgb_color, count = dominant_color_via_mini_kmeans(image_path, self.WIDTH, self.HEIGHT, self.CLUSTERS)
 
-                # Transform image
-                new_width, new_height = calculate_new_size(image, self.WIDTH, self.HEIGHT)
-                image = image.resize((new_width, new_height), Image.ANTIALIAS)
-
-                img_array = np.array(image)
-                img_vector = img_array.reshape((img_array.shape[0] * img_array.shape[1], 3))
-
-                # Modeling
-                model = KMeans(n_clusters=self.CLUSTERS)
-                labels = model.fit_predict(img_vector)
-                label_counts = Counter(labels)
-
-                hex_colors = [rgb2hex(center) for center in model.cluster_centers_]
-
-                results = list(zip(hex_colors, list(label_counts.values())))
-                results.sort(key=lambda tup: tup[1], reverse=True)
-
-                print(results)
-
-                hex_color, count = results[0]
-                rgb_colors = hex2rgb(hex_color)
-
-                dom_colors.loc[len(dom_colors)] = [image_name, image_path, parent_folder] + rgb_colors + [count]
-
-                if not self.SILENT:
-                    print("Dominating color is: %s with %s counts" % results[0])
+                dom_colors.loc[len(dom_colors)] = [image_name, image_path, parent_folder] + list(rgb_color) + [count]
 
                 progress = round((ind + 1) / no_of_images * 100)
                 self.index_gui.indexProgressBar.setValue(progress)
 
-                # Make subsequent backup
-                # if (ind+1) % 500 == 0:
-                #    dom_colors.to_csv(os.path.join("AllImages", "allimagesDom-3_" + str(f"{ind+1:04d}") + ".csv"))
 
-            except:
+            except Exception as exc:
                 self.log("Error occured at with image no. %s (%s in %s)" % (ind, image_name, parent_folder))
+                self.log(exc)
+                print(exc)
 
         dom_colors.to_csv(self.index_path)
         print("Saved dominant colors of %s images in %s" % (len(dom_colors), self.index_path))

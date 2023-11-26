@@ -1,6 +1,8 @@
 import sys
 import yaml
 
+from pathlib import Path
+
 from PyQt5 import QtWidgets
 
 from control import Control
@@ -23,7 +25,7 @@ window = Gui()
 model = Model()
 control = Control(model, window)
 
-if INDEX_PATH is None:
+if INDEX_PATH is None or not Path(INDEX_PATH).exists():
     print("Don't have index file. Starting index generator ...")
     index_gui = IndexGui()
     index_generator = IndexGenerator(index_gui, control)
